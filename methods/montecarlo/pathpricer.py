@@ -1,3 +1,3 @@
 class PathPricer:
-    def operator(self,path):
+    def __call__(self,path):
         pass

@@ -12,7 +12,7 @@ class NullPayoff(Payoff):
     def description(self):
         return self.name()
 
-    def operator(self, price):
+    def __call__(self, price):
         raise RuntimeError('dummy payoff given')
 
 
@@ -42,7 +42,7 @@ class FloatingTypePayoff(TypePayoff):
         result = 'OptionType:' + self.name()
         return result
 
-    def operator(self, price):
+    def __call__(self, price):
         raise RuntimeError('"floating payoff not handled"')
 
 
@@ -67,7 +67,7 @@ class PlainVanillaPayoff(StrikedTypePayoff):
     def name(self):
         return 'Vanilla'
 
-    def operator(self, price):
+    def __call__(self, price):
         if self._type.name == 'Call':
             return max(price - self._strike, 0.0)
         elif self._type.name == 'Put':
@@ -83,7 +83,7 @@ class PercentageStrikePayoff(StrikedTypePayoff):
     def name(self):
         return 'PercentageStrike'
 
-    def operator(self, price):
+    def __call__(self, price):
         if self._type.name == 'Call':
             return price * max(1.0 - self._strike, 0)
         elif self._type.name == 'Put':
@@ -99,7 +99,7 @@ class AssetOrNothingPayoff(StrikedTypePayoff):
     def name(self):
         return 'AssetOrNothing'
 
-    def operator(self, price):
+    def __call__(self, price):
         if self._type.name == 'Call':
             return price if price > self._strike else 0
         elif self._type.name == 'Put':
@@ -116,7 +116,7 @@ class CashOrNothingPayoff(StrikedTypePayoff):
     def name(self):
         return 'CashOrNothing'
 
-    def operator(self, price):
+    def __call__(self, price):
         if self._type.name == 'Call':
             return self._cashPayoff if price > self._strike else 0
         elif self._type.name == 'Put':
@@ -144,7 +144,7 @@ class GapPayoff(StrikedTypePayoff):
         result += ',SecondStrike:' + str(self.secondStrike())
         return result
 
-    def operator(self, price):
+    def __call__(self, price):
         if self._type.name == 'Call':
             return price - self._secondStrike if price >= self._strike else 0
         elif self._type.name == 'Put':

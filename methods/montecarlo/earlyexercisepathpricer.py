@@ -13,7 +13,7 @@ class EarlyExerciseTraits:
 
 
 class EarlyExercisePathPricer:
-    def operator(self):
+    def __call__(self,path,t):
         pass
 
     def state(self,path,t):

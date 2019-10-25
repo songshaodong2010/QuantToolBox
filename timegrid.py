@@ -1,43 +1,72 @@
 class TimeGrid:
-    def __init__(self, begin=None, end=None, steps=None):
-        if begin is None and end is not None and steps is not None:
+    def __init__(self, points=None, end=None, steps=None):
+        self._times = []
+        self._dt = []
+        self._mandatoryTimes = []
+        if points is None and end is not None and steps is not None:
             if end <= 0:
                 raise RuntimeError('negative times not allowed')
             dt = end / steps
-            self._times.reserve(steps + 1)
             for i in range(steps + 1):
-                self._times.push_back(dt * i)
-            self._mandatoryTimes = [end]
+                self._times.append(dt * i)
+            self._mandatoryTimes.append(end)
             self._dt = [dt for i in range(steps)]
-        elif begin is not None and end is not None and steps is None:
-            self._mandatoryTimes = [begin, end]
-            if begin is end:
+        elif points is not None and end is None and steps is None:
+            self._mandatoryTimes = points
+            if len(points) <= 1:
                 raise RuntimeError('empty time sequence')
-            sorted(self._mandatoryTimes)
-            if self._mandatoryTimes.front() < 0:
+            self._mandatoryTimes.sort()
+            if self._mandatoryTimes[0] < 0:
                 raise RuntimeError('negative times not allowed')
-            self._mandatoryTimes.resize(self._mandatoryTimes - self._mandatoryTimes.begin())
-            last = self._mandatoryTimes.back()
-            dtMax = None
+            e = []
+            [e.append(item) for item in self._mandatoryTimes if not item in e]
+            self._mandatoryTimes = [item - self._mandatoryTimes[0] for item in self._mandatoryTimes]
+            if self._mandatoryTimes[0] > 0:
+                self._times.append(0)
+            self._times.extend(self._mandatoryTimes)
+            self._dt = [self._times[i + 1] - self._times[i] for i in range(len(self._times) - 1)]
+        elif points is not None and end is None and steps is not None:
+            self._mandatoryTimes = points
+            if len(points) <= 1:
+                raise RuntimeError('empty time sequence')
+            self._mandatoryTimes.sort()
+            if self._mandatoryTimes[0] < 0:
+                raise RuntimeError('negative times not allowed')
+            e = []
+            [e.append(item) for item in self._mandatoryTimes if not item in e]
+            self._mandatoryTimes = [item - self._mandatoryTimes[0] for item in self._mandatoryTimes]
+            last = self._mandatoryTimes[-1]
             if steps == 0:
-                diff = None
-                adjacent_difference(self.begin)
-
-        self._times = None
-        self._dt = None
-        self._mandatoryTimes = None
+                diff = [self._mandatoryTimes[0]]
+                diff.extend([self._mandatoryTimes[i + 1] - self._mandatoryTimes[i] for i in
+                             range(len(self._mandatoryTimes) - 1)])
+                if diff[0] == 0:
+                    diff.pop(0)
+                dtMax = min(diff)
+            else:
+                dtMax = last / steps
+            periodBegin = 0
+            self._times.append(periodBegin)
+            for t in self._mandatoryTimes:
+                periodEnd = t
+                if periodEnd != 0:
+                    nSteps = int((periodEnd - periodBegin) / dtMax + 0.5)
+                    nSteps = nSteps if nSteps != 0 else 1
+                    dt = (periodEnd - periodBegin) / nSteps
+                    self._times = [(i + 1) * dt for i in range(nSteps)]
+                periodBegin = periodEnd
+            self._dt = [self._times[i + 1] - self._times[i] for i in range(len(self._times) - 1)]
+        else:
+            raise RuntimeError('Wrong parameter!')
 
     def __getitem__(self, item):
         return self._times[item]
 
     def size(self):
-        return self._times.size()
+        return len(self._times)
 
     def empty(self):
-        return self._times is None
+        return len(self._times) == 0
 
-    def front(self):
-        return self._times.front()
-
-    def back(self):
-        return self._times.back()
+    def dt(self, i):
+        return self._dt[i]
